@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Management</h1>
+    <h2>Add Student</h2>
+    <form id="studentForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="number" id="roll" placeholder="Roll" required>
+        <input type="text" id="city" placeholder="City" required>
+        <button type="submit">Add Student</button>
+    </form>
+    <h2>Students List</h2>
+    <table id="studentsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Roll</th>
+                <th>City</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/studentapi/';
+        const studentsTable = document.getElementById('studentsTable').getElementsByTagName('tbody')[0];
+        const studentForm = document.getElementById('studentForm');
+
+        // Fetch and display students
+        function fetchStudents() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    studentsTable.innerHTML = '';
+                    data.forEach(student => {
+                        const row = studentsTable.insertRow();
+                        row.innerHTML = `
+                            <td>${student.id}</td>
+                            <td>${student.name}</td>
+                            <td>${student.roll}</td>
+                            <td>${student.city}</td>
+                            <td>
+                                <button onclick="deleteStudent(${student.id})">Delete</button>
+                            </td>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Add a new student
+        studentForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(studentForm);
+            const data = {
+                name: formData.get('name'),
+                roll: formData.get('roll'),
+                city: formData.get('city')
+            };
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                fetchStudents();
+                studentForm.reset();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Delete a student
+        function deleteStudent(id) {
+            fetch(apiUrl + id, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchStudents();
+                } else {
+                    console.error('Error:', response);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Initial fetch of students
+        fetchStudents();
+    </script>
+</body>
+</html>
